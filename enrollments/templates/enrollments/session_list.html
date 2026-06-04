@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Индивидуальные тренировки — ФОРСАЖ{% endblock %}
+{% block content %}
+<h2>Индивидуальные тренировки с персональным тренером</h2>
+
+<fieldset>
+    <legend><b>📆 Календарь</b></legend>
+
+    <form method="get" style="display:inline;">
+        <input type="hidden"
+               name="year"
+               value="{{ prev_year }}">
+
+        <input type="hidden"
+               name="month"
+               value="{{ prev_month }}">
+
+        <button type="submit">
+            ← Предыдущий месяц
+        </button>
+    </form>
+
+    <form method="get" style="display:inline;">
+        <input type="hidden"
+               name="year"
+               value="{{ next_year }}">
+
+        <input type="hidden"
+               name="month"
+               value="{{ next_month }}">
+
+        <button type="submit">
+            Следующий месяц →
+        </button>
+    </form>
+
+    <br><br>
+
+    <p align="center">
+        <strong>
+            {{ month_name }} {{ year }}
+        </strong>
+    </p>
+
+    <pre style="font-family: monospace;">
+{{ text_calendar }}
+    </pre>
+</fieldset>
+
+<br>
+
+{% if user.is_superuser %}
+
+<fieldset>
+    <legend><b>Информация</b></legend>
+
+    <p>
+        У администраторов нет индивидуальных тренировок.
+    </p>
+</fieldset>
+
+{% else %}
+
+<fieldset style="border: 1px solid #ff9900; padding: 15px; margin-bottom: 25px;">
+    <legend><strong>⏰ Забронировать индивидуальное занятие</strong></legend>
+    <form method="post" action="{% url 'enrollments:schedule_session' %}">
+        {% csrf_token %}
+        <table cellpadding="6">
+            <tr>
+                <td>Инструктор:</td>
+                <td>
+                    <select name="instructor_id">
+                        {% for i in instructors %}
+                            <option value="{{ i.id }}">{{ i.user.last_name }} {{ i.user.first_name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Направление тренировки:</td>
+                <td>
+                    <select name="workout_type_id">
+                        {% for wt in workout_types %}
+                            <option value="{{ wt.id }}">{{ wt.name }} - {{ wt.price_per_session }} BYN</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Дата и время:</td>
+                <td><input type="datetime-local" name="session_date" required></td>
+            </tr>
+        </table>
+        <button type="submit">Зарезервировать тренера</button>
+    </form>
+</fieldset>
+
+<h3>Ваш планер индивидуальных тренировок:</h3>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+    <tr bgcolor="#f0f0f0">
+        <th>Инструктор</th>
+        <th>Клиент</th>
+        <th>Услуга</th>
+        <th>Дата / Время тренировки</th>
+        <th>Статус</th>
+    </tr>
+    {% for s in sessions %}
+    <tr>
+        <td>{{ s.instructor }}</td>
+        <td>{{ s.client }}</td>
+        <td>{{ s.workout_type.name }}</td>
+        <td>{{ s.session_date }}</td>
+        <td align="center"><strong>{{ s.get_status_display|default:s.status }}</strong></td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="5" align="center">У вас пока нет запланированных индивидуальных тренировок.</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+{% endblock %}

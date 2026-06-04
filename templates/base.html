@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>
+        {% block title %}
+            ФОРСАЖ — Фитнес-клуб
+        {% endblock %}
+    </title>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const options = { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            };
+            const userTimeEl = document.getElementById('user-time');
+            if (userTimeEl) {
+                userTimeEl.textContent = now.toLocaleString('ru-RU', options);
+            }
+        }
+        setInterval(updateClock, 1000);
+        window.addEventListener('load', updateClock);
+    </script>
+</head>
+<body style="font-family: system-ui, -apple-system, sans-serif; max-width: 1200px; margin: 0 auto; padding: 10px;">
+
+<!-- ========================= -->
+<!-- ПАНЕЛЬ ТЕСТИРОВАНИЯ РОЛЕЙ -->
+<!-- ========================= -->
+<table width="100%" cellpadding="6" cellspacing="0" border="1" style="background-color: #222; color: #fff; font-size: 11px; border-color: #444; margin-bottom: 15px; font-family: system-ui, sans-serif; border-collapse: collapse;">
+    <tr>
+        <td align="left">
+            <strong>⚙️ ПАНЕЛЬ УПРАВЛЕНИЯ КЛИЕНТОМ:</strong> Текущая сессия: 
+            <span style="color: #00ffc4; font-weight: bold;">
+                {% if user.is_authenticated %}
+                    {{ user.first_name }} {{ user.last_name }} 
+                    {% if user.is_superuser %}(Администратор/superuser){% elif user.instructor %}(Инструктор){% else %}(Клиент){% endif %}
+                {% else %}
+                    Гость (Аноним)
+                {% endif %}
+            </span> |
+            Переключить роль на ходу:
+            <a href="{% url 'users:switch_role' 'client' %}" style="background-color: #444; color: #fff; border: 1px solid #777; padding: 2px 6px; margin: 0 2px; text-decoration: none; display: inline-block;">Клиент</a>
+            <a href="{% url 'users:switch_role' 'instructor' %}" style="background-color: #444; color: #fff; border: 1px solid #777; padding: 2px 6px; margin: 0 2px; text-decoration: none; display: inline-block;">Инструктор</a>
+            <a href="{% url 'users:switch_role' 'admin' %}" style="background-color: #444; color: #fff; border: 1px solid #777; padding: 2px 6px; margin: 0 2px; text-decoration: none; display: inline-block;">Администратор</a>
+        </td>
+    </tr>
+</table>
+
+<!-- ========================= -->
+<!-- ШАПКА -->
+<!-- ========================= -->
+<table width="100%" cellpadding="10" cellspacing="0" border="0">
+    <tr bgcolor="#f0f0f0">
+        <!-- ЛОГО -->
+        <td width="220">
+            <a href="{% url 'content:home' %}" style="text-decoration: none; color: black;">
+                <strong>🏋️ ФОРСАЖ</strong>
+            </a>
+        </td>
+
+        <!-- НАВИГАЦИЯ -->
+        <td align="center">
+            <a href="{% url 'content:home' %}">Главная</a> |
+            <a href="{% url 'content:about' %}">О компании</a> |
+            <a href="{% url 'content:news_list' %}">Новости</a> |
+            <a href="{% url 'workouts:schedule' %}">Расписание</a> |
+            <a href="{% url 'enrollments:session_list' %}">Индивидуальные</a> |
+            <a href="{% url 'content:term_list' %}">Словарь</a> |
+            <a href="{% url 'promocodes:list' %}">Промокоды</a> |
+            <a href="{% url 'content:vacancies' %}">Вакансии</a> |
+            <a href="{% url 'reviews:list' %}">Отзывы</a> |
+            <a href="{% url 'content:faq' %}">Вопросы-ответы</a> |
+            <a href="{% url 'content:contacts' %}">Контакты</a>
+
+            {% if user.is_superuser %}
+            |
+            <a href="{% url 'content:statistics' %}">
+                📊 Статистика
+            </a>
+            |
+            {% endif %}
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'users:profile' %}">Личный кабинет</a> |
+                <form method="post" action="{% url 'users:logout' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit">Выход</button>
+                </form>
+            {% else %}
+                <a href="{% url 'users:login' %}">Вход</a> |
+                <a href="{% url 'users:register' %}">Регистрация</a>
+            {% endif %}
+        </td>
+
+        <!-- ВАЛЮТА -->
+        <td width="260" align="right" bgcolor="#e9ecef">
+            <table cellpadding="3">
+                <tr>
+                    <td><strong>💱 Конвертер:</strong></td>
+                    <td><small>{{ example_conversion }}</small></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <form method="post" action="{% url 'users:set_currency' %}">
+                            {% csrf_token %}
+                            <select name="currency">
+                                <option value="BYN" {% if selected_currency == 'BYN' %}selected{% endif %}>BYN (Br)</option>
+                                <option value="USD" {% if selected_currency == 'USD' %}selected{% endif %}>USD ($)</option>
+                                <option value="EUR" {% if selected_currency == 'EUR' %}selected{% endif %}>EUR (€)</option>
+                            </select>
+                            <button type="submit">Применить</button>
+                        </form>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- ========================= -->
+<!-- ВРЕМЯ -->
+<!-- ========================= -->
+<table width="100%" cellpadding="8" cellspacing="0" border="0" bgcolor="#e9ecef" style="margin-top: 5px; margin-bottom: 5px; border-radius: 4px;">
+    <tr>
+        <td align="center">
+            <strong>🕐 Серверное время:</strong>
+            <span style="font-family: monospace; font-weight: bold;">
+                {{ server_now|date:"d.m.Y H:i:s" }}
+            </span>
+            {% if server_timezone %}
+                <small style="color: #555;">({{ server_timezone }})</small>
+            {% endif %}
+            &nbsp;|&nbsp;
+            <strong>👤 Время пользователя (браузер):</strong>
+            <span id="user-time" style="font-family: monospace; font-weight: bold; color: #007bff;">Загрузка...</span>
+        </td>
+    </tr>
+</table>
+
+<!-- ========================= -->
+<!-- СООБЩЕНИЯ -->
+<!-- ========================= -->
+{% if messages %}
+    <table width="100%" cellpadding="10" cellspacing="0" border="0">
+        <tr>
+            <td>
+                {% for message in messages %}
+                    <fieldset style="border: 1px solid black; padding: 10px;">
+                        <strong>{{ message }}</strong>
+                    </fieldset>
+                {% endfor %}
+            </td>
+        </tr>
+    </table>
+{% endif %}
+
+<!-- ========================= -->
+<!-- КОНТЕНТ -->
+<!-- ========================= -->
+<table width="100%" cellpadding="20" border="0">
+    <tr>
+        <td>
+            {% block content %}
+            {% endblock %}
+        </td>
+    </tr>
+</table>
+
+<!-- ========================= -->
+<!-- ПОДВАЛ -->
+<!-- ========================= -->
+<hr>
+<center>
+    <p>
+        © 2026 Фитнес-клуб «ФОРСАЖ» · <a href="{% url 'content:privacy' %}">Политика конфиденциальности</a>
+    </p>
+</center>
+
+</body>
+</html>

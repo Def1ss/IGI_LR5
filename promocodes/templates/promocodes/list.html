@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Промокоды — ФОРСАЖ{% endblock %}
+{% block content %}
+<h2>Промокоды клуба «ФОРСАЖ»</h2>
+
+<fieldset style="border: 1px solid #000; padding: 15px; margin-bottom: 25px;">
+    <legend><strong>🏷️ Валидатор промокодов</strong></legend>
+    <form method="get">
+        Проверить код: <input type="text" name="check_code" value="{{ check_code|default:'' }}" required>
+        <button type="submit">Проверить</button>
+    </form>
+    {% if result %}
+        <p><strong>Результат:</strong> {{ result }}</p>
+    {% endif %}
+</fieldset>
+
+<h3>Список активных клубных дисконтов:</h3>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+    <tr bgcolor="#f0f0f0">
+        <th>Промокод</th>
+        <th>Скидка</th>
+        <th>Действует до</th>
+        <th>Область применения</th>
+    </tr>
+    {% for p in promos %}
+    {% if p.is_active %}
+    <tr>
+        <td align="center"><code style="font-size: 1.2em; font-weight: bold; color: red;">{{ p.code }}</code></td>
+        <td align="center"><b>{{ p.discount_percent }}%</b></td>
+        <td align="center">{{ p.valid_to }}</td>
+        <td>{{ p.applicable_to }}</td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+</table>
+{% endblock %}

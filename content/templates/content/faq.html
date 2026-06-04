@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Часто задаваемые вопросы — ФОРСАЖ{% endblock %}
+{% block content %}
+<h2>Вопросы и ответы (FAQ)</h2>
+{% for faq in faqs %}
+    <fieldset style="margin-bottom: 15px;">
+        <legend>❓ <strong>{{ faq.question }}</strong></legend>
+        <p style="padding-left: 10px; border-left: 3px solid #ff9900;">{{ faq.answer }}</p>
+    </fieldset>
+{% empty %}
+    <p>Раздел наполняется.</p>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Вакансии клуба — ФОРСАЖ{% endblock %}
+{% block content %}
+<h2>Наши Вакансии</h2>
+{% if vacancies %}
+    {% for v in vacancies %}
+        <fieldset style="border: 1px solid #333; margin-bottom: 15px; padding: 15px;">
+            <legend><strong>{{ v.position }}</strong> (Зарплата: {{ v.salary|default:"Договорная" }})</legend>
+            <p>{{ v.description }}</p>
+        </fieldset>
+    {% endfor %}
+{% else %}
+    <p>В данный момент активных вакансий нет.</p>
+{% endif %}
+{% endblock %}

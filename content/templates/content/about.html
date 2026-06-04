@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}О компании — ФОРСАЖ{% endblock %}
+{% block content %}
+<h2>О компании и история успеха</h2>
+<p>Сделать фитнес доступным, качественным и эффективным для каждого — наша главная миссия!</p>
+
+<h3>Хроника фитнес-клуба:</h3>
+<table border="1" cellpadding="8" width="100%">
+    {% for h in history %}
+    <tr>
+        <td width="120"><b>{{ h.year }}</b></td>
+
+        <td width="180">
+            {% if h.image_url %}
+                <img src="{{ h.image_url }}" width="160" style="border-radius:8px;">
+            {% endif %}
+        </td>
+
+        <td>{{ h.event }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Словарь фитнеса — ФОРСАЖ{% endblock %}
+
+{% block content %}
+
+<h2>Фитнес Словарь</h2>
+
+{% if user.is_superuser %}
+<p>
+    <a href="{% url 'content:term_create' %}" style="font-weight:bold;">
+        ➕ Добавить термин
+    </a>
+</p>
+{% endif %}
+
+<table border="1" cellpadding="10" cellspacing="0" width="100%"
+       style="border-collapse: collapse; border-color: #ddd; font-family: sans-serif;">
+
+    <tr bgcolor="#f0f0f0">
+        <th width="240">Термин</th>
+        <th width="150">Категория</th>
+        <th>Определение</th>
+    </tr>
+
+    {% for t in terms %}
+    <tr>
+        <td valign="top">
+
+            <strong>{{ t.term }}</strong>
+
+            {% if t.image_url %}
+                <div style="margin-top: 8px;">
+                    <img src="{{ t.image_url }}"
+                         alt="{{ t.term }}"
+                         width="150"
+                         style="border-radius: 4px; border: 1px solid #ccc; max-height: 100px; object-fit: cover;"
+                         referrerpolicy="no-referrer">
+                </div>
+            {% endif %}
+
+        </td>
+
+        <td align="center" valign="top">
+            <span style="display:inline-block;
+                         background:#e3f2fd;
+                         color:#0d47a1;
+                         padding:2px 8px;
+                         border-radius:12px;
+                         font-size:12px;
+                         font-weight:bold;">
+                {{ t.category }}
+            </span>
+        </td>
+
+        <td valign="top" style="line-height: 1.5;">
+
+            {{ t.definition }}
+
+            {% if user.is_superuser %}
+                <br><br>
+
+                <a href="{% url 'content:term_edit' t.id %}">✏️ Изменить</a>
+                |
+                <a href="{% url 'content:term_delete' t.id %}"
+                   onclick="return confirm('Удалить термин?');">
+                    🗑 Удалить
+                </a>
+            {% endif %}
+
+        </td>
+    </tr>
+
+    {% empty %}
+    <tr>
+        <td colspan="3" align="center">
+            Термины отсутствуют. Добавьте их в админке или через сайт.
+        </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% if terms.has_other_pages %}
+<div style="margin-top: 20px; text-align: center; font-family: sans-serif;">
+
+    {% if terms.has_previous %}
+        <a href="?page={{ terms.previous_page_number }}"
+           style="text-decoration:none; padding:6px 12px; border:1px solid #bbb; background:#fcfcfc; border-radius:4px;">
+            ← Назад
+        </a>
+    {% endif %}
+
+    <span style="margin: 0 15px; font-weight: bold;">
+        Страница {{ terms.number }} из {{ terms.paginator.num_pages }}
+    </span>
+
+    {% if terms.has_next %}
+        <a href="?page={{ terms.next_page_number }}"
+           style="text-decoration:none; padding:6px 12px; border:1px solid #bbb; background:#fcfcfc; border-radius:4px;">
+            Вперед →
+        </a>
+    {% endif %}
+
+</div>
+{% endif %}
+
+{% endblock %}

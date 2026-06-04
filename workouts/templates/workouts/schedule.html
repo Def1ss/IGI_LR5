@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load currency_tags %}
+
+{% block title %}Расписание — ФОРСАЖ{% endblock %}
+
+{% block content %}
+<h1>📅 Расписание групповых занятий</h1>
+
+<!-- Текстовый календарик -->
+<fieldset>
+    <legend><b>📆 Календарь</b></legend>
+    
+    <div style="display:inline-block;">
+        <form method="get" style="display:inline;">
+            <input type="hidden" name="year" value="{{ prev_year }}">
+            <input type="hidden" name="month" value="{{ prev_month }}">
+            <!-- Сохраняем текущие фильтры -->
+            <input type="hidden" name="date" value="{{ filters.date }}">
+            <input type="hidden" name="group" value="{{ filters.group }}">
+            <input type="hidden" name="hall" value="{{ filters.hall }}">
+            <input type="hidden" name="q" value="{{ filters.q }}">
+            <button type="submit">← Предыдущий месяц</button>
+        </form>
+        
+        <form method="get" style="display:inline;">
+            <input type="hidden" name="year" value="{{ next_year }}">
+            <input type="hidden" name="month" value="{{ next_month }}">
+            <!-- Сохраняем текущие фильтры -->
+            <input type="hidden" name="date" value="{{ filters.date }}">
+            <input type="hidden" name="group" value="{{ filters.group }}">
+            <input type="hidden" name="hall" value="{{ filters.hall }}">
+            <input type="hidden" name="q" value="{{ filters.q }}">
+            <button type="submit">Следующий месяц →</button>
+        </form>
+    </div>
+    
+    <br><br>
+    
+    <p align="center">
+        <strong>{{ month_name }} {{ year }}</strong>
+    </p>
+    
+    <pre style="text-align: center; font-family: monospace; font-size: 14px;">
+{{ text_calendar }}</pre>
+</fieldset>
+
+<br>
+
+<fieldset>
+    <legend><b>Фильтры</b></legend>
+    <form method="get">
+        <table width="100%" cellpadding="5">
+            <tr>
+                <td width="100">Дата:</td>
+                <td><input type="date" name="date" value="{{ filters.date }}"></td>
+                <td width="100">Группа:</td>
+                <td>
+                    <select name="group">
+                        <option value="">Все</option>
+                        {% for g in groups %}
+                        <option value="{{ g.id }}" {% if filters.group == g.id|stringformat:"s" %}selected{% endif %}>{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Зал:</td>
+                <td>
+                    <select name="hall">
+                        <option value="">Все</option>
+                        {% for hall_id, hall_name in halls %}
+                        <option value="{{ hall_id }}" {% if filters.hall == hall_id|stringformat:"s" %}selected{% endif %}>{{ hall_name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>Поиск:</td>
+                <td><input type="search" name="q" value="{{ filters.q }}"></td>
+            </tr>
+            <tr>
+                <td colspan="4" align="center">
+                    <button type="submit">Применить фильтры</button>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Сохраняем параметры календаря при отправке фильтров -->
+        <input type="hidden" name="year" value="{{ year }}">
+        <input type="hidden" name="month" value="{{ month }}">
+    </form>
+</fieldset>
+
+<br>
+
+{% if user.is_superuser %}
+<fieldset>
+    <legend><b>Массовое повышение цен (Админ)</b></legend>
+    <form method="post" action="{% url 'workouts:bulk_price' %}">
+        {% csrf_token %}
+        <table>
+            <tr>
+                <td>Вид тренировки:</td>
+                <td>
+                    <select name="workout_type_id" required>
+                        {% for wt in workout_types %}
+                        <option value="{{ wt.id }}">{{ wt.name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>Процент:</td>
+                <td><input type="number" name="percent" value="10" min="1" max="100"></td>
+                <td><button type="submit">Повысить цены</button></td>
+            </tr>
+        </table>
+    </form>
+</fieldset>
+<br>
+{% endif %}
+
+<fieldset>
+    <legend><b>Занятия</b></legend>
+    <table border="1" width="100%" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr bgcolor="#f0f0f0">
+                <th>Группа</th>
+                <th>Тип</th>
+                <th>Зал</th>
+                <th>Начало</th>
+                <th>Окончание</th>
+                <th>Цикл ({{ selected_currency }})</th>
+                <th>Запись</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cls in classes %}
+            <tr>
+                <td>{{ cls.group.name }}</td>
+                <td>{{ cls.group.workout_type.name }}</td>
+                <td>{{ cls.hall.name }}</td>
+                <td>{{ cls.start_time|date:"d.m.Y H:i" }}</td>
+                <td>{{ cls.end_time|date:"H:i" }}</td>
+                <td>{% convert_price cls.group.workout_type.price_per_cycle %}</td>
+                <td>
+
+                {% if user.is_superuser %}
+
+                    <span style="color:red;">
+                        Только просмотр
+                    </span>
+
+                {% elif client and cls.group_id not in enrolled_group_ids %}
+
+                    <form method="post"
+                        action="{% url 'workouts:enroll_group' cls.group_id %}"
+                        style="display:inline;">
+
+                        {% csrf_token %}
+                        <input type="text"
+                            name="promo_code"
+                            placeholder="Промокод"
+                            size="10">
+
+                        <button type="submit">
+                            Записаться
+                        </button>
+
+                    </form>
+
+                {% elif client and cls.group_id in enrolled_group_ids %}
+
+                    <strong>✅ Записан</strong>
+
+                {% elif not user.is_authenticated %}
+
+                    <a href="{% url 'users:login' %}">
+                        Войти
+                    </a>
+
+                {% endif %}
+
+            </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" align="center"><i>Занятий не найдено</i></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</fieldset>
+{%endblock%}
+
+{% if classes.has_other_pages %}
+<div style="margin-top: 20px; text-align: center; font-family: sans-serif;">
+    {% if classes.has_previous %}
+        <a href="?page={{ classes.previous_page_number }}&date={{ filters.date }}&group={{ filters.group }}&hall={{ filters.hall }}&q={{ filters.q }}&year={{ year }}&month={{ month }}" style="text-decoration: none; padding: 6px 12px; border: 1px solid #bbb; background-color: #fcfcfc; border-radius: 4px; color: #333;">&larr; Назад</a>
+    {% endif %}
+    <span style="margin: 0 15px; font-weight: bold; font-size: 14px;">Страница {{ classes.number }} из {{ classes.paginator.num_pages }}</span>
+    {% if classes.has_next %}
+        <a href="?page={{ classes.next_page_number }}&date={{ filters.date }}&group={{ filters.group }}&hall={{ filters.hall }}&q={{ filters.q }}&year={{ year }}&month={{ month }}" style="text-decoration: none; padding: 6px 12px; border: 1px solid #bbb; background-color: #fcfcfc; border-radius: 4px; color: #333;">Вперед &rarr;</a>
+    {% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}{{ item.title }} — ФОРСАЖ{% endblock %}
+{% block content %}
+<p><a href="{% url 'content:news_list' %}" style="text-decoration: none; font-weight: bold;">&larr; Вернуться к списку новостей</a></p>
+<hr>
+<h2>{{ item.title }}</h2>
+<p style="color: #666; font-size: 13px;">Опубликовано: {{ item.published_date|date:"d.m.Y H:i" }} | Автор: {{ item.author_name }}</p>
+
+{% if item.image_url %}
+    <div style="margin: 15px 0;">
+        <img src="{{ item.image_url }}" alt="{{ item.title }}" max-width="100%" style="max-height: 400px; border-radius: 8px; border: 1px solid #ddd; object-fit: cover;" referrerPolicy="no-referrer">
+    </div>
+{% endif %}
+
+<div style="font-size: 15px; line-height: 1.6; white-space: pre-wrap; margin-top: 20px;">
+    {{ item.full_text }}
+</div>
+{% endblock %}

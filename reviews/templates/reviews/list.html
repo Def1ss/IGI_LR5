@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Отзывы — ФОРСАЖ{% endblock %}
+{% block content %}
+<h2>Отзывы посетителей клуба «ФОРСАЖ»</h2>
+
+{% if user.is_authenticated %}
+    <fieldset style="border: 1px dashed black; padding: 15px; margin-bottom: 25px;">
+        <legend>✍️ Оставить отзыв о клубе</legend>
+        <form method="post" action="{% url 'reviews:add' %}">
+            {% csrf_token %}
+            <table cellpadding="5">
+                <tr>
+                    <td>Ваша оценка:</td>
+                    <td>
+                        <select name="rating">
+                            <option value="5">⭐⭐⭐⭐⭐ (Отлично)</option>
+                            <option value="4">⭐⭐⭐⭐ (Хорошо)</option>
+                            <option value="3">⭐⭐⭐ (Удовлетворительно)</option>
+                            <option value="2">⭐⭐ (Плохо)</option>
+                            <option value="1">⭐ (Ужасно)</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Комментарий:</td>
+                    <td><textarea name="comment" rows="4" cols="50" required placeholder="Поделитесь своими впечатлениями..."></textarea></td>
+                </tr>
+            </table>
+            <button type="submit">Опубликовать отзыв</button>
+        </form>
+    </fieldset>
+{% endif %}
+
+<h3>Последние отзывы:</h3>
+<table border="1" cellpadding="10" cellspacing="0" width="100%" style="font-family: sans-serif; border-collapse: collapse; border-color: #ddd; margin-bottom: 20px;">
+    <thead>
+        <tr bgcolor="#f0f0f0">
+            <th width="25%">Клиент</th>
+            <th width="15%" align="center">Оценка</th>
+            <th>Комментарий</th>
+            <th width="20%">Дата публикации</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in reviews %}
+        <tr>
+            <td><strong>{{ r.client.user.last_name }} {{ r.client.user.first_name }}</strong></td>
+            <td align="center">
+                <span style="color: #ffc107; font-size: 15px;">
+                    {% if r.rating == 5 %}⭐⭐⭐⭐⭐{% elif r.rating == 4 %}⭐⭐⭐⭐{% elif r.rating == 3 %}⭐⭐⭐{% elif r.rating == 2 %}⭐⭐{% else %}⭐{% endif %}
+                </span>
+                <br>
+                <small style="color: #666;">({{ r.rating }}/5)</small>
+            </td>
+            <td><i>{{ r.comment }}</i></td>
+            <td><small style="color: #777;">{{ r.created_at|date:"d.m.Y H:i" }}</small></td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" align="center">Отзывов пока нет. Вы будете первыми!</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if reviews.has_other_pages %}
+<div style="margin-top: 20px; text-align: center; font-family: sans-serif;">
+    {% if reviews.has_previous %}
+        <a href="?page={{ reviews.previous_page_number }}" style="text-decoration: none; padding: 6px 12px; border: 1px solid #bbb; background-color: #fcfcfc; border-radius: 4px; color: #333;">&larr; Назад</a>
+    {% endif %}
+    <span style="margin: 0 15px; font-weight: bold; font-size: 14px;">Страница {{ reviews.number }} из {{ reviews.paginator.num_pages }}</span>
+    {% if reviews.has_next %}
+        <a href="?page={{ reviews.next_page_number }}" style="text-decoration: none; padding: 6px 12px; border: 1px solid #bbb; background-color: #fcfcfc; border-radius: 4px; color: #333;">Вперед &rarr;</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

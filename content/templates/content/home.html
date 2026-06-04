@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Главная страница — ФОРСАЖ{% endblock %}
+{% block content %}
+<h2>Добро пожаловать в фитнес-клуб «ФОРСАЖ»!</h2>
+<p>Современный фитнес-клуб: групповые и индивидуальные тренировки, спа-зона, коврики для йоги и профессиональные тренеры.</p>
+
+<fieldset style="border: 1px solid #ccc; padding: 15px; background: #fff;">
+    <legend><strong>💬 Мотивация дня</strong></legend>
+    <p><i>«Движение — это жизнь, а регулярный фитнес — это здоровая и красивая жизнь!»</i></p>
+</fieldset>
+
+<br>
+<h3>Последняя новость клуба</h3>
+{% if latest_news %}
+    {% for news in latest_news %}
+        <table border="1" cellpadding="10" cellspacing="0" width="100%">
+            <tr>
+                <td width="200" align="center" bgcolor="#f9f9f9">
+                    {% if news.image_url %}
+                        <img src="{{ news.image_url }}"
+                            alt="{{ news.title }}"
+                            width="180">
+                    {% else %}
+                        Нет фото
+                    {% endif %}
+                </td>
+                <td>
+                    <h4>{{ news.title }}</h4>
+                    <p>{{ news.summary }}</p>
+                    <a href="{% url 'content:news_detail' news.slug %}">Читать полностью...</a>
+                </td>
+            </tr>
+        </table>
+    {% endfor %}
+{% else %}
+    <p>Новостей пока нет.</p>
+{% endif %}
+{% endblock %}

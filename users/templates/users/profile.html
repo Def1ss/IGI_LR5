@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Личный кабинет — ФОРСАЖ{% endblock %}
+{% block content %}
+<h2>Личный кабинет: {{ user.last_name }} {{ user.first_name }}</h2>
+<p>Роль в системе: <strong>{% if user.is_superuser %}Администратор{% elif user.instructor %}Инструктор{% else %}Клиент{% endif %}</strong></p>
+
+<h3>Информация о клиенте:</h3>
+{% if client %}
+    <ul>
+        <li>Телефон: {{ client.phone }}</li>
+
+        <li>
+            Дата рождения:
+            {{ client.birth_date }}
+        </li>
+
+        <li>
+            Возраст:
+            {{ age }} лет
+        </li>
+
+        <li>
+            Медицинские отметки:
+            {{ client.medical_notes|default:"Отсутствуют" }}
+        </li>
+    </ul>
+
+    <h3>Ваша клубная карта:</h3>
+    {% if cards %}
+        {% for card in cards %}
+            <fieldset style="border: 1px solid green; padding: 10px; background: #e6ffe6; margin-bottom: 10px;">
+                <legend><strong>Клубная Карта: {{ card.card_type }}</strong></legend>
+                <p>Действует до: <b>{{ card.valid_to }}</b></p>
+                <p>Стоимость: {{ card.price_paid }} BYN</p>
+            </fieldset>
+        {% endfor %}
+    {% else %}
+        <p style="color: red;">У вас пока нет активной клубной карты!</p>
+        <form method="post" action="{% url 'users:buy_card' %}">
+            {% csrf_token %}
+            <label>Оформить карту:</label>
+            <select name="card_type">
+                <option value="Standart">Стандартная на месяц - 150 BYN</option>
+                <option value="VIP">VIP премиум на месяц - 500 BYN</option>
+            </select>
+            <button type="submit">Приобрести</button>
+        </form>
+    {% endif %}
+{% else %}
+    <p>Профиль клиента отсутствует (возможно вы администратор или тренер).</p>
+{% endif %}
+{% endblock %}
